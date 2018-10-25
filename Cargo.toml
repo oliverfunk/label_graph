@@ -11,4 +11,7 @@ license = "MIT/Apache-2.0"
 keywords = ["graph", "search", "mapping"]
 categories = ["data-structures", "algorithms"]
 
+[badges]
+travis-ci = { repository = "oliverfunk/label_graph", branch = "master" }
+
 [dependencies]
