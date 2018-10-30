@@ -1,6 +1,6 @@
-extern crate label_graph;
+extern crate labelgraph;
 
-use label_graph::*;
+use labelgraph::*;
 
 fn main() {
     let mut g = LabelGraph::<DirectedLabelNode<Vec<i32>>>::new();

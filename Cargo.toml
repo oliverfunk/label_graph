@@ -1,17 +1,17 @@
 [package]
-name = "label_graph"
+name = "labelgraph"
 version = "0.1.0"
 authors = ["Oliver Funk <oliver.funk@thoughtexpress.com>"]
 
 description = "A simple to use graph implementation, allowing random access to nodes via labels."
-documentation = "https://docs.rs/label_graph/"
-repository = "https://github.com/oliverfunk/label_graph"
+documentation = "https://docs.rs/labelgraph/"
+repository = "https://github.com/oliverfunk/labelgraph"
 
 license = "MIT/Apache-2.0"
 keywords = ["graph", "search", "mapping"]
 categories = ["data-structures", "algorithms"]
 
 [badges]
-travis-ci = { repository = "oliverfunk/label_graph", branch = "master" }
+travis-ci = { repository = "oliverfunk/labelgraph", branch = "master" }
 
 [dependencies]
