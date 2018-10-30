@@ -1,227 +1,199 @@
-pub trait LabelNode {
-    type Data;
-
-    fn new_node(label: String) -> Self;
-    fn get_label(&self) -> String;
-    fn set_data(&mut self, data: Self::Data);
-    fn get_data(&self) -> Option<&Self::Data>;
-    fn attach_connection(&mut self, edge: GraphEdge);
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
+pub enum ConnectionDirection {
+    From,
+    To,
 }
 
-pub trait DirectedNode {
-    fn link_node_as_input(&mut self, from_node: mut Self);
-
-    fn link_node_as_output(&mut self, to_node: mut Self);
-
-    /// All nodes that are input into this node
-    fn get_input_nodes(&self, this_index: NodeIndex) -> Vec<GraphEdge>;
-
-    /// All nodes that this node outputs to
-    fn get_output_nodes(&self, this_index: NodeIndex) -> Vec<GraphEdge>;
+#[derive(Debug, Clone)]
+pub struct GraphEdge {
+    node_label: String,
+    direction: ConnectionDirection,
+    weight: i32,
 }
 
-pub trait UndirectedNode {
-    fn get_connected_nodes(&self, this_index: NodeIndex) -> Vec<GraphEdge>;
+impl GraphEdge {
+    pub fn new(node_label: String, direction: ConnectionDirection, weight: i32) -> GraphEdge {
+        GraphEdge {
+            node_label,
+            direction,
+            weight,
+        }
+    }
 }
 
-/// Holds the nodes of the graph
 #[derive(Debug)]
-pub struct LabelGraph<N>
-where
-    N: LabelNode,
-{
-    nodes: Vec<N>,
-    sorted: bool,
-}
-
-//impl<N> LabelGraph<N>
-//where
-//    N: LabelNode + UndirectedNode,
-//{
-//    pub fn link_nodes(&self, from: String, to: String) {
-//
-//    }
-//}
-//
-//impl<N> LabelGraph<N>
-//where
-//    N: LabelNode + DirectedNode,
-//{
-//    pub fn link_nodes(&mut self, from_node_label: &str, to_node_label: &str, weight: i32) {
-//        if !self.sorted { panic!("Cannot link before sorting") }
-//
-//        // check if the nodes exist
-//        let from_n = self.get_node_index(from_node_label);
-//        let to_n = self.get_node_index(to_node_label);
-//
-//        if from_n.is_some() && to_n.is_some() {
-//            let edge = GraphEdge::new(from_node_label.to_string(), to_node_label.to_string(), weight);
-//
-//            self.nodes.get_mut(from_n.unwrap().0).unwrap().attach_connection()
-//        }
-//    }
-//}
-
-impl<N> LabelGraph<N>
-where
-    N: LabelNode,
-{
-    pub fn new() -> LabelGraph<N> {
-        LabelGraph {
-            nodes: Vec::new(),
-            sorted: false,
-        }
-    }
-
-    pub fn with_capacity(capacity: usize) -> LabelGraph<N> {
-        LabelGraph {
-            nodes: Vec::with_capacity(capacity),
-            sorted: false,
-        }
-    }
-
-    pub fn add_node(&mut self, node: N) {
-        // can only add nodes if not sorted, becuase once it is sorted
-        // one may link nodes and the links depend on the index
-        // therefore the indecies cannot change
-        //        if !self.sorted {
-        //            // dono what happens if two nodes have the same label
-        //            self.nodes.push(node);
-        //            self.sorted = false;
-        //        }
-
-        self.nodes.push(node);
-        self.sorted = false;
-    }
-
-    pub fn get_node_index(&self, label: &str) -> Option<NodeIndex> {
-        if self.sorted {
-            match self
-                .nodes
-                .binary_search_by_key(&label.to_string(), |n| n.get_label())
-            {
-                Ok(idx) => Some(NodeIndex(idx)),
-                Err(_idx) => None,
-            }
-        } else {
-            panic!("Cannot search for a node without sorting first!")
-        }
-    }
-
-    pub fn get_node(&self, label: &str) -> Option<(&N, NodeIndex)> {
-        if self.sorted {
-            match self
-                .nodes
-                .binary_search_by_key(&label.to_string(), |n| n.get_label())
-            {
-                Ok(idx) => Some((self.nodes.get(idx).unwrap(), NodeIndex(idx))),
-                Err(_idx) => None,
-            }
-        } else {
-            panic!("Cannot search for a node without sorting first!")
-        }
-    }
-
-    pub fn get_mut_node(&mut self, label: &str) -> Option<(&mut N, NodeIndex)> {
-        if self.sorted {
-            match self
-                .nodes
-                .binary_search_by_key(&label.to_string(), |n| n.get_label())
-            {
-                Ok(idx) => Some((self.nodes.get_mut(idx).unwrap(), NodeIndex(idx))),
-                Err(_idx) => None,
-            }
-        } else {
-            panic!("Cannot search for a node without sorting first!")
-        }
-    }
-
-    pub fn sort(&mut self) {
-        self.nodes.sort_unstable_by_key(|n| n.get_label());
-        self.sorted = true;
-    }
-}
-
-/// Node to be used in a directed graph
-#[derive(Debug)]
-pub struct DirectedLabelNode<D> {
+pub struct LabelNode<D> {
     label: String,
     connections: Vec<GraphEdge>,
-    data: Option<Box<D>>,
+    data: Option<D>,
 }
 
-impl<D> DirectedNode for DirectedLabelNode<D> {
-    fn link_node_as_input(&mut self, from_node: mut DirectedLabelNode<D>, weight: i32) {
-        self.attach_connection(GraphEdge::new(from_node.get_label(), self.get_label(), weight));
-        from_node.link_node_as_output(self, weight);
-    }
-
-    fn link_node_as_output(&mut self, to_node: DirectedLabelNode<D>) {
-
-    }
-
-    fn get_input_nodes(&self, this_index: NodeIndex) -> Vec<GraphEdge> {
-        self.connections
-            .iter()
-            .map(|edge| edge.clone())
-            .filter(|edge| edge.to == this_index)
-            .collect()
-    }
-
-    fn get_output_nodes(&self, this_index: NodeIndex) -> Vec<GraphEdge> {
-        self.connections
-            .iter()
-            .map(|edge| edge.clone())
-            .filter(|c| c.from == this_index)
-            .collect()
-    }
-}
-
-impl<D> LabelNode for DirectedLabelNode<D> {
-    type Data = D;
-
-    fn new_node(label: String) -> Self {
+impl<D> LabelNode<D> {
+    pub fn new_node(label: &str) -> Self {
         Self {
-            label,
+            label: label.to_string(),
             connections: Vec::new(),
             data: None,
         }
     }
 
-    fn get_label(&self) -> String {
+    pub fn get_label(&self) -> String {
         self.label.clone()
     }
 
-    fn set_data(&mut self, data: D) {
-        let d = Box::new(data);
-        self.data = Some(d);
+    pub fn set_data(&mut self, data: D) {
+        self.data = Some(data);
     }
 
-    fn get_data(&self) -> Option<&D> {
+    pub fn get_data(&self) -> Option<&D> {
         match self.data {
             Some(ref d) => Some(d),
             None => None,
         }
     }
+}
 
-    fn attach_connection(&mut self, edge: GraphEdge) {
-        self.connections.push(edge);
+pub trait DirectedGraph {
+    /// Create a link from one node to another (directional)
+    fn link_nodes(&mut self, from_node_label: &str, to_node_label: &str);
+
+    /// Return all nodes that input into this node
+    fn get_inputs_for_node(&self, node_label: &str) -> Option<Vec<GraphEdge>>;
+
+    /// Return all nodes that this node outputs to
+    fn get_outputs_for_node(&self, node_label: &str) -> Option<Vec<GraphEdge>>;
+}
+
+pub trait UndirectedGraph {
+    /// Create a link between node A and node B (non-directional)
+    fn link_nodes(&mut self, node_a: &str, node_b: &str);
+
+    /// Return all nodes connected to this node
+    fn get_connected_nodes(&self, node_label: &str) -> Option<Vec<GraphEdge>>;
+}
+
+pub trait LabelGraph<D> {
+    fn sort(&mut self);
+    fn check_sorted(&self, error_message: &str);
+    fn add_node(&mut self, node: LabelNode<D>);
+    fn get_node(&self, node_label: &str) -> Option<&LabelNode<D>>;
+    fn get_mut_node(&mut self, node_label: &str) -> Option<&mut LabelNode<D>>;
+}
+
+/// Holds the nodes of the graph
+#[derive(Debug)]
+pub struct DirectedLabelGraph<D> {
+    nodes: Vec<LabelNode<D>>,
+    sorted: bool,
+}
+
+impl<D> DirectedLabelGraph<D> {
+    pub fn new() -> DirectedLabelGraph<D> {
+        DirectedLabelGraph {
+            nodes: Vec::new(),
+            sorted: false,
+        }
+    }
+
+    pub fn with_capacity(capacity: usize) -> DirectedLabelGraph<D> {
+        DirectedLabelGraph {
+            nodes: Vec::with_capacity(capacity),
+            sorted: false,
+        }
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
-pub struct NodeIndex(usize);
+impl<D> LabelGraph<D> for DirectedLabelGraph<D> {
+    fn sort(&mut self) {
+        self.nodes.sort_unstable_by_key(|n| n.get_label());
+        self.sorted = true;
+    }
 
-#[derive(Debug, Clone)]
-pub struct GraphEdge {
-    from: String,
-    to: String,
-    weight: i32,
+    fn check_sorted(&self, error_message: &str) {
+        if !self.sorted {
+            panic!(error_message.to_string());
+        }
+    }
+
+    fn add_node(&mut self, node: LabelNode<D>) {
+        self.nodes.push(node);
+        self.sorted = false;
+    }
+
+    fn get_node(&self, node_label: &str) -> Option<&LabelNode<D>> {
+        self.check_sorted("Cannot search for a node without sorting first!");
+
+        match self
+            .nodes
+            .binary_search_by_key(&node_label.to_string(), |n| n.get_label())
+        {
+            Ok(idx) => Some(self.nodes.get(idx).unwrap()),
+            Err(_idx) => None,
+        }
+    }
+
+    fn get_mut_node(&mut self, node_label: &str) -> Option<&mut LabelNode<D>> {
+        self.check_sorted("Cannot search for a node without sorting first!");
+
+        match self
+            .nodes
+            .binary_search_by_key(&node_label.to_string(), |n| n.get_label())
+        {
+            Ok(idx) => Some(self.nodes.get_mut(idx).unwrap()),
+            Err(_idx) => None,
+        }
+    }
 }
 
-impl GraphEdge {
-    pub fn new(from: String, to: String, weight: i32) -> GraphEdge {
-        GraphEdge { from, to, weight }
+impl<D> DirectedGraph for DirectedLabelGraph<D> {
+    fn link_nodes(&mut self, from_node_label: &str, to_node_label: &str) {
+        self.check_sorted("Cannot link nodes before sorting!");
+
+        self.get_mut_node(from_node_label).map(|n| {
+            let edge = GraphEdge::new(to_node_label.to_string(), ConnectionDirection::To, 1);
+            n.connections.push(edge)
+        });
+
+        self.get_mut_node(to_node_label).map(|n| {
+            let edge = GraphEdge::new(from_node_label.to_string(), ConnectionDirection::From, 1);
+            n.connections.push(edge)
+        });
+    }
+
+    fn get_inputs_for_node(&self, node_label: &str) -> Option<Vec<GraphEdge>> {
+        self.check_sorted("Cannot check inputs for node before sorting!");
+
+        let node = self.get_node(node_label);
+        if node.is_some() {
+            Some(
+                node.unwrap()
+                    .connections
+                    .iter()
+                    .map(|edge| edge.clone())
+                    .filter(|edge| edge.direction == ConnectionDirection::To)
+                    .collect(),
+            )
+        } else {
+            None
+        }
+    }
+
+    fn get_outputs_for_node(&self, node_label: &str) -> Option<Vec<GraphEdge>> {
+        self.check_sorted("Cannot check outputs for node before sorting!");
+
+        let node = self.get_node(node_label);
+        if node.is_some() {
+            Some(
+                node.unwrap()
+                    .connections
+                    .iter()
+                    .map(|edge| edge.clone())
+                    .filter(|edge| edge.direction == ConnectionDirection::From)
+                    .collect(),
+            )
+        } else {
+            None
+        }
     }
 }
 
