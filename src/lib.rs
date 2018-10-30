@@ -1,9 +1,12 @@
+
+/// Edge direction
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum ConnectionDirection {
     From,
     To,
 }
 
+/// Representation of a an edge between two nodes
 #[derive(Debug, Clone)]
 pub struct GraphEdge {
     node_label: String,
@@ -21,6 +24,7 @@ impl GraphEdge {
     }
 }
 
+/// A node in the graph. It holds its label, connections and data
 #[derive(Debug)]
 pub struct LabelNode<D> {
     label: String,
@@ -73,10 +77,21 @@ pub trait UndirectedGraph {
 }
 
 pub trait LabelGraph<D> {
+    /// A function to sort the graph, based on the label
     fn sort(&mut self);
+
+    /// A helper function used to wrap a panic!() if the
+    /// graph isn't sorted when it needs to be.
     fn check_sorted(&self, error_message: &str);
+
+    /// A function to add a node to the graph. The graph
+    /// will no longer be sorted if a node is added.
     fn add_node(&mut self, node: LabelNode<D>);
+
+    /// A function to get a non-mutable reference to a node.
     fn get_node(&self, node_label: &str) -> Option<&LabelNode<D>>;
+
+    /// A function to get a mutable reference to a node.
     fn get_mut_node(&mut self, node_label: &str) -> Option<&mut LabelNode<D>>;
 }
 
