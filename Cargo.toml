@@ -12,6 +12,6 @@ keywords = ["graph", "search", "mapping"]
 categories = ["data-structures", "algorithms"]
 
 [badges]
-travis-ci = { repository = "oliverfunk/labelgraph", branch = "master" }
+travis-ci = { repository = "oliverfunk/label_graph", branch = "master" }
 
 [dependencies]

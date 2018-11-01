@@ -18,12 +18,13 @@ fn main() {
     g.sort();
 
     println!("linking node1 -> node2");
-    g.link_nodes("node1", "node2");
+    g.link_nodes("node1", "node2", 1);
+    g.link_nodes("node1", "node22", 2);
 
     {
         let n1_from_graph = g.get_mut_node("node1").unwrap();
 
-        let data = ("DATA".to_string(), vec![100,53,23]);
+        let data = ("DATA".to_string(), vec![100, 53, 23]);
 
         n1_from_graph.set_data(data);
 
