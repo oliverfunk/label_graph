@@ -234,15 +234,15 @@ impl GraphEdge {
 pub struct LabelNode<D> {
     label: String,
     connections: Vec<GraphEdge>,
-    data: Option<D>,
+    data: D,
 }
 
 impl<D> LabelNode<D> {
-    pub fn new_node(label: &str) -> Self {
+    pub fn new_node(label: &str, data: D) -> Self {
         Self {
             label: label.to_string(),
             connections: Vec::new(),
-            data: None,
+            data,
         }
     }
 
@@ -250,15 +250,12 @@ impl<D> LabelNode<D> {
         self.label.clone()
     }
 
-    pub fn set_data(&mut self, data: D) {
-        self.data = Some(data);
+    pub fn get_data(&self) -> &D {
+        &self.data
     }
 
-    pub fn get_data(&self) -> Option<&D> {
-        match self.data {
-            Some(ref d) => Some(d),
-            None => None,
-        }
+    pub fn get_mut_data(&mut self) -> &mut D {
+        &mut self.data
     }
 }
 
