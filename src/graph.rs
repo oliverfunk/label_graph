@@ -42,7 +42,7 @@ pub trait UndirectedGraph {
 }
 
 /// Holds the nodes of the graph
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct DirectedLabelGraph<D> {
     nodes: Vec<LabelNode<D>>,
     sorted: bool,
@@ -242,7 +242,7 @@ impl GraphEdge {
 }
 
 /// A node in the graph. It holds its label, connections and data.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct LabelNode<D> {
     label: String,
     connections: Vec<GraphEdge>,
