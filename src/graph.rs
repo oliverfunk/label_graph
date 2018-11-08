@@ -177,7 +177,7 @@ impl<D> DirectedGraph for DirectedLabelGraph<D> {
                     .connections
                     .iter()
                     .map(|edge| edge.clone())
-                    .filter(|edge| edge.direction == ConnectionDirection::To)
+                    .filter(|edge| edge.direction == ConnectionDirection::From)
                     .collect(),
             )
         } else {
@@ -195,7 +195,7 @@ impl<D> DirectedGraph for DirectedLabelGraph<D> {
                     .connections
                     .iter()
                     .map(|edge| edge.clone())
-                    .filter(|edge| edge.direction == ConnectionDirection::From)
+                    .filter(|edge| edge.direction == ConnectionDirection::To)
                     .collect(),
             )
         } else {
