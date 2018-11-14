@@ -1,4 +1,10 @@
+
+use std::slice::*;
+
 pub trait LabelGraph<D> {
+    /// Iterator through all nodes in graph
+    fn all_nodes (&self) -> Iter<'_, LabelNode<D>>;
+
     /// A helper function used to wrap a panic!() if the
     /// graph isn't sorted when it needs to be.
     fn check_sorted(&self, error_message: &str);
@@ -65,6 +71,11 @@ impl<D> DirectedLabelGraph<D> {
 }
 
 impl<D> LabelGraph<D> for DirectedLabelGraph<D> {
+
+    fn all_nodes(&self) -> Iter<'_, LabelNode<D>> {
+        self.nodes.iter()
+    }
+
     fn check_sorted(&self, error_message: &str) {
         if !self.sorted {
             panic!(error_message.to_string());

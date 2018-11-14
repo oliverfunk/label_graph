@@ -1,6 +1,6 @@
 [package]
 name = "labelgraph"
-version = "0.1.5"
+version = "0.1.6"
 authors = ["Oliver Funk <oliver.funk@thoughtexpress.com>"]
 
 description = "A simple to use graph implementation, allowing random access to nodes via labels."
