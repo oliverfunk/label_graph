@@ -1,7 +1,6 @@
+extern crate im;
 
-
-pub mod graph_traversal_algorithms;
-
+mod graph_traversal_algorithms;
 
 mod graph;
 pub use graph::*;

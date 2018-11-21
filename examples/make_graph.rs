@@ -31,10 +31,9 @@ fn main() {
         println!("node1's data: {:?}", n1_from_graph.get_data());
     }
 
-    for n in g.all_nodes(){
+    for n in g.all_nodes() {
         println!("node: {:?}", n)
     }
-
 
     println!("node1's outputs: {:?}", g.get_inputs_for_node("node1"));
     println!("node2's inputs: {:?}", g.get_outputs_for_node("node2"));
