@@ -2,18 +2,12 @@ extern crate labelgraph;
 
 use labelgraph::*;
 
-struct fucku {
-    a: String,
-}
-
-type NodeData = (fucku);
-
 fn main() {
     let mut g = DirectedLabelGraph::new();
 
-    let n1 = LabelNode::new(fucku{a: String::new()});
-    let n2 = LabelNode::new(fucku{a: String::new()});
-    let n3 = LabelNode::new(fucku{a: String::new()});
+    let n1 = LabelNode::new(String::new());
+    let n2 = LabelNode::new(String::new());
+    let n3 = LabelNode::new(String::new());
 
     g.add_node("n1", n1);
     g.add_node("n2", n2);
