@@ -1,44 +1,6 @@
-use std::borrow::{Borrow, BorrowMut};
+use std::collections::BTreeMap;
+use std::collections::btree_map::Values;
 use std::slice::*;
-
-use im::ordmap::Entry;
-use im::OrdMap;
-
-//pub trait LabelGraph<D> {
-//        /// Add a node to the graph. The graph
-//    /// will no longer be sorted if a node is added.
-//    fn add_node(&mut self, label: String, node: LabelNode<D>);
-//
-//    /// Get a non-mutable reference to a node.
-//    fn get_node(&self, node_label: &str) -> Option<&LabelNode<D>>;
-//
-//    /// Get a mutable reference to a node.
-//    fn get_mut_node(&mut self, node_label: &str) -> Option<&mut LabelNode<D>>;
-//
-//    /// Check if a node with the node_label exists in the graph
-//    fn check_node_exists(&self, node_label: &str) -> bool;
-//}
-//
-//pub trait DirectedGraph {
-//    /// Create a link from one node to another (directional). If the link already exists
-//    /// the weight will be updated.
-//    fn link_nodes(&mut self, from_node_label: &str, to_node_label: &str, weight: i64);
-//
-//    /// Return all nodes that input into this node
-//    fn get_inputs_for_node(&self, node_label: &str) -> Option<Vec<GraphEdge>>;
-//
-//    /// Return all nodes that this node outputs to
-//    fn get_outputs_for_node(&self, node_label: &str) -> Option<Vec<GraphEdge>>;
-//}
-//
-//pub trait UndirectedGraph {
-//    /// Create a link between node A and node B (non-directional). If the link already exists
-//    /// the weight will be updated.
-//    fn link_nodes(&mut self, node_a: &str, node_b: &str, weight: i64);
-//
-//    /// Return all nodes connected to this node
-//    fn get_connected_nodes(&self, node_label: &str) -> Option<Vec<GraphEdge>>;
-//}
 
 /// Holds the nodes of the graph
 #[derive(Debug, Clone)]
@@ -46,57 +8,57 @@ pub struct DirectedLabelGraph<D>
 where
     D: Clone,
 {
-    nodes: OrdMap<String, LabelNode<D>>,
+    nodes: BTreeMap<String, LabelNode<D>>,
 }
 
-impl<'a, D: Clone> DirectedLabelGraph<D> {
+impl<D: Clone> DirectedLabelGraph<D> {
     pub fn new() -> Self {
         DirectedLabelGraph {
-            nodes: OrdMap::new(),
+            nodes: BTreeMap::new()
         }
     }
 
-    fn node_exists(&self, node_label: &str) -> bool {
-        self.nodes.contains_key(node_label)
-    }
-
-    fn add_node(&mut self, node_label: &str, node: LabelNode<D>) {
-        self.nodes.insert(node_label.to_string(), node);
-    }
-
-    fn get_node(&mut self, node_label: &str) -> Option<&'a LabelNode<D>> {
-        let a = self.nodes.entry(node_label.to_string());
-        match a {
-            Entry::Occupied(oe) => Some(oe.get()),
-            Entry::Vacant(_) => None,
-        }
+    fn get_node(&self, node_label: &str) -> Option<&LabelNode<D>> {
+        self.nodes.get(node_label)
     }
 
     fn get_mut_node(&mut self, node_label: &str) -> Option<&mut LabelNode<D>> {
-        let a = self.nodes.entry(node_label.to_string());
-        match a {
-            Entry::Occupied(mut oe) => Some(oe.get_mut()),
-            Entry::Vacant(_) => None,
-        }
+        self.nodes.get_mut(node_label)
     }
-    //
-    //    fn get_mut_node_data(&mut self, node_label: &str) -> &'a mut D {
-    //        Box::leak(self.nodes.get(node_label).unwrap().clone().data)
-    //    }
 
-    fn link_nodes(&mut self, from_node_label: &str, to_node_label: &str, weight: i64) {
+    pub fn iter_nodes(&self) -> Values<String, LabelNode<D>> {
+        self.nodes.values()
+    }
+
+    pub fn node_exists(&self, node_label: &str) -> bool {
+        self.nodes.contains_key(node_label)
+    }
+
+    pub fn add_node(&mut self, node_label: &str, node: LabelNode<D>) {
+        self.nodes.insert(node_label.to_string(), node);
+    }
+
+    pub fn get_node_data(&self, node_label: &str) -> Option<&D> {
+        self.get_node(node_label).map(|n| &n.data)
+    }
+
+    pub fn get_mut_node_data(&mut self, node_label: &str) -> Option<&mut D> {
+        self.get_mut_node(node_label).map(|n| &mut n.data)
+    }
+
+    pub fn link_nodes(&mut self, from_node_label: &str, to_node_label: &str, weight: i64) {
         let mut from_exists = false;
 
-        self.get_mut_node(from_node_label).map(|n| {
+        self.get_mut_node(from_node_label).map(|node| {
             from_exists = true;
 
             // have to do it this way, don't want to use nightly NLL feature.
-            let updated = match n.connections.iter_mut().find(|edge| {
+            let updated = match node.connections.iter_mut().find(|edge| {
                 edge.node_label == to_node_label.to_string()
                     && edge.direction == ConnectionDirection::To
             }) {
-                Some(e) => {
-                    e.weight = weight;
+                Some(edge) => {
+                    edge.weight = weight;
                     true
                 }
                 None => false,
@@ -104,7 +66,7 @@ impl<'a, D: Clone> DirectedLabelGraph<D> {
 
             if !updated {
                 // create a new edge and push it
-                n.connections.push(GraphEdge::new(
+                node.connections.push(GraphEdge::new(
                     to_node_label.to_string(),
                     ConnectionDirection::To,
                     weight,
@@ -112,16 +74,16 @@ impl<'a, D: Clone> DirectedLabelGraph<D> {
             }
         });
 
-        // if from doesn't exist, return and don't modify to
+        // if from doesn't exist, return and don't modify to_node
         if !from_exists { return; }
 
-        self.get_mut_node(to_node_label).map(|n| {
-            let updated = match n.connections.iter_mut().find(|edge| {
+        self.get_mut_node(to_node_label).map(|node| {
+            let updated = match node.connections.iter_mut().find(|edge| {
                 edge.node_label == from_node_label.to_string()
                     && edge.direction == ConnectionDirection::From
             }) {
-                Some(e) => {
-                    e.weight = weight;
+                Some(edge) => {
+                    edge.weight = weight;
                     true
                 }
                 None => false,
@@ -129,7 +91,7 @@ impl<'a, D: Clone> DirectedLabelGraph<D> {
 
             if !updated {
                 // create a new edge and push it
-                n.connections.push(GraphEdge::new(
+                node.connections.push(GraphEdge::new(
                     from_node_label.to_string(),
                     ConnectionDirection::From,
                     weight,
@@ -138,15 +100,15 @@ impl<'a, D: Clone> DirectedLabelGraph<D> {
         });
     }
 
-    fn get_inputs_for_node(&mut self, node_label: &str) -> Option<Vec<GraphEdge>> {
+    pub fn get_inputs_for_node(&mut self, node_label: &str) -> Option<Vec<GraphEdge>> {
         let node = self.get_node(node_label);
         if node.is_some() {
             Some(
                 node.unwrap()
                     .connections
                     .iter()
-                    .map(|edge| edge.clone())
                     .filter(|edge| edge.direction == ConnectionDirection::From)
+                    .map(|edge| edge.clone())
                     .collect(),
             )
         } else {
@@ -154,7 +116,7 @@ impl<'a, D: Clone> DirectedLabelGraph<D> {
         }
     }
 
-    fn get_outputs_for_node(&mut self, node_label: &str) -> Option<Vec<GraphEdge>> {
+    pub fn get_outputs_for_node(&mut self, node_label: &str) -> Option<Vec<GraphEdge>> {
         let node = self.get_node(node_label);
         if node.is_some() {
             Some(
@@ -208,18 +170,19 @@ impl GraphEdge {
     }
 }
 
-/// A node in the graph. It holds its label, connections and data.
+/// A node in the graph, which stores its data and its connections to other nodes.
 #[derive(Debug, Clone)]
 pub struct LabelNode<D> {
     connections: Vec<GraphEdge>,
-    data: Box<D>,
+    data: D,
 }
 
-impl<D: Clone> LabelNode<D> {
-    pub fn new_node(label: &str, data: D) -> Self {
-        Self {
+// todo: is it good to be explicate about the Clone trait bound in this struct?
+impl<D> LabelNode<D> {
+    pub fn new(data: D) -> Self {
+        LabelNode {
             connections: Vec::new(),
-            data: Box::new(data),
+            data
         }
     }
 }
