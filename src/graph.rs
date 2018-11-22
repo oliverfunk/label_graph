@@ -8,7 +8,16 @@ pub struct DirectedLabelGraph<D>
     nodes: BTreeMap<String, LabelGraphNode<D>>,
 }
 
-impl<D: Default> DirectedLabelGraph<D> {
+impl<D> IntoIterator for DirectedLabelGraph<D> {
+    type Item = i32;
+    type IntoIter = ::std::vec::IntoIter<i32>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
+    }
+}
+
+impl<D> DirectedLabelGraph<D> {
     pub fn new() -> Self {
         Default::default()
     }
