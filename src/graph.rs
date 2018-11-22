@@ -1,17 +1,14 @@
 use std::collections::BTreeMap;
 use std::collections::btree_map::Values;
-use std::slice::*;
 
 /// Holds the nodes of the graph
 #[derive(Debug, Clone)]
 pub struct DirectedLabelGraph<D>
-where
-    D: Clone,
 {
     nodes: BTreeMap<String, LabelNode<D>>,
 }
 
-impl<D: Clone> DirectedLabelGraph<D> {
+impl<D> DirectedLabelGraph<D> {
     pub fn new() -> Self {
         DirectedLabelGraph {
             nodes: BTreeMap::new()

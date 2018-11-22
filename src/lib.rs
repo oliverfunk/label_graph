@@ -1,5 +1,3 @@
-extern crate im;
-
 mod graph_traversal_algorithms;
 
 mod graph;

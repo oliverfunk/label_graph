@@ -15,4 +15,3 @@ categories = ["data-structures", "algorithms"]
 travis-ci = { repository = "oliverfunk/label_graph", branch = "master" }
 
 [dependencies]
-im = {version ="12.2.0", features=["rayon"]}
