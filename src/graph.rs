@@ -1,29 +1,27 @@
-use std::collections::BTreeMap;
 use std::collections::btree_map::Values;
+use std::collections::BTreeMap;
 
 /// Holds the nodes of the graph
-#[derive(Debug, Clone)]
+#[derive(Default, Debug, Clone)]
 pub struct DirectedLabelGraph<D>
 {
-    nodes: BTreeMap<String, LabelNode<D>>,
+    nodes: BTreeMap<String, LabelGraphNode<D>>,
 }
 
-impl<D> DirectedLabelGraph<D> {
+impl<D: Default> DirectedLabelGraph<D> {
     pub fn new() -> Self {
-        DirectedLabelGraph {
-            nodes: BTreeMap::new()
-        }
+        Default::default()
     }
 
-    fn get_node(&self, node_label: &str) -> Option<&LabelNode<D>> {
+    fn get_node(&self, node_label: &str) -> Option<&LabelGraphNode<D>> {
         self.nodes.get(node_label)
     }
 
-    fn get_mut_node(&mut self, node_label: &str) -> Option<&mut LabelNode<D>> {
+    fn get_mut_node(&mut self, node_label: &str) -> Option<&mut LabelGraphNode<D>> {
         self.nodes.get_mut(node_label)
     }
 
-    pub fn iter_nodes(&self) -> Values<String, LabelNode<D>> {
+    pub fn iter_nodes(&self) -> Values<String, LabelGraphNode<D>> {
         self.nodes.values()
     }
 
@@ -31,7 +29,7 @@ impl<D> DirectedLabelGraph<D> {
         self.nodes.contains_key(node_label)
     }
 
-    pub fn add_node(&mut self, node_label: &str, node: LabelNode<D>) {
+    pub fn add_node(&mut self, node_label: &str, node: LabelGraphNode<D>) {
         self.nodes.insert(node_label.to_string(), node);
     }
 
@@ -44,15 +42,29 @@ impl<D> DirectedLabelGraph<D> {
     }
 
     pub fn link_nodes(&mut self, from_node_label: &str, to_node_label: &str, weight: i64) {
-        let mut from_exists = false;
+        if let Some(node) = self.get_mut_node(from_node_label) {
+            // correct way to do this is the following,
+            // but waiting for nightly feature NLL (non-lexical lifetimes)
+            // to go stable
+//            match node.connections.iter_mut().find(|edge| {
+//                edge.node_label == to_node_label && edge.direction == ConnectionDirection::To
+//            }) {
+//                Some(edge) => {
+//                    edge.weight = weight;
+//                    true
+//                }
+//                None => {
+//                    // create a new edge and push it
+//                    node.connections.push(GraphEdge::new(
+//                        to_node_label.to_string(),
+//                        ConnectionDirection::To,
+//                        weight,
+//                    ))
+//                }
+//            };
 
-        self.get_mut_node(from_node_label).map(|node| {
-            from_exists = true;
-
-            // have to do it this way, don't want to use nightly NLL feature.
             let updated = match node.connections.iter_mut().find(|edge| {
-                edge.node_label == to_node_label.to_string()
-                    && edge.direction == ConnectionDirection::To
+                edge.node_label == to_node_label && edge.direction == ConnectionDirection::To
             }) {
                 Some(edge) => {
                     edge.weight = weight;
@@ -63,21 +75,20 @@ impl<D> DirectedLabelGraph<D> {
 
             if !updated {
                 // create a new edge and push it
-                node.connections.push(GraphEdge::new(
+                node.connections.push(LabelGraphEdge::new(
                     to_node_label.to_string(),
                     ConnectionDirection::To,
                     weight,
                 ))
             }
-        });
+        } else {
+            // if from_node doesn't exist, return and therefor don't modify to_node
+            return;
+        }
 
-        // if from doesn't exist, return and don't modify to_node
-        if !from_exists { return; }
-
-        self.get_mut_node(to_node_label).map(|node| {
+        if let Some(node) = self.get_mut_node(to_node_label) {
             let updated = match node.connections.iter_mut().find(|edge| {
-                edge.node_label == from_node_label.to_string()
-                    && edge.direction == ConnectionDirection::From
+                edge.node_label == from_node_label && edge.direction == ConnectionDirection::From
             }) {
                 Some(edge) => {
                     edge.weight = weight;
@@ -88,16 +99,16 @@ impl<D> DirectedLabelGraph<D> {
 
             if !updated {
                 // create a new edge and push it
-                node.connections.push(GraphEdge::new(
+                node.connections.push(LabelGraphEdge::new(
                     from_node_label.to_string(),
                     ConnectionDirection::From,
                     weight,
                 ))
             }
-        });
+        };
     }
 
-    pub fn get_inputs_for_node(&mut self, node_label: &str) -> Option<Vec<GraphEdge>> {
+    pub fn get_inputs_for_node(&self, node_label: &str) -> Option<Vec<LabelGraphEdge>> {
         let node = self.get_node(node_label);
         if node.is_some() {
             Some(
@@ -105,7 +116,7 @@ impl<D> DirectedLabelGraph<D> {
                     .connections
                     .iter()
                     .filter(|edge| edge.direction == ConnectionDirection::From)
-                    .map(|edge| edge.clone())
+                    .cloned()
                     .collect(),
             )
         } else {
@@ -113,15 +124,15 @@ impl<D> DirectedLabelGraph<D> {
         }
     }
 
-    pub fn get_outputs_for_node(&mut self, node_label: &str) -> Option<Vec<GraphEdge>> {
+    pub fn get_outputs_for_node(&self, node_label: &str) -> Option<Vec<LabelGraphEdge>> {
         let node = self.get_node(node_label);
         if node.is_some() {
             Some(
                 node.unwrap()
                     .connections
                     .iter()
-                    .map(|edge| edge.clone())
                     .filter(|edge| edge.direction == ConnectionDirection::To)
+                    .cloned()
                     .collect(),
             )
         } else {
@@ -138,17 +149,18 @@ pub enum ConnectionDirection {
 }
 
 /// Representation of a an edge between two nodes.
-// todo: convert node_label property into node and store a reference to a node. Will need to have some method that drops the ref if the node is deleted
+// todo: try convert node_label property into node and store a reference to a node.
+// Will need to have some method that drops the ref if the node is deleted
 #[derive(Debug, Clone)]
-pub struct GraphEdge {
+pub struct LabelGraphEdge {
     direction: ConnectionDirection,
     node_label: String,
     weight: i64,
 }
 
-impl GraphEdge {
-    pub fn new(node_label: String, direction: ConnectionDirection, weight: i64) -> GraphEdge {
-        GraphEdge {
+impl LabelGraphEdge {
+    pub fn new(node_label: String, direction: ConnectionDirection, weight: i64) -> LabelGraphEdge {
+        LabelGraphEdge {
             direction,
             node_label,
             weight,
@@ -170,15 +182,15 @@ impl GraphEdge {
 
 /// A node in the graph, which stores its data and its connections to other nodes.
 #[derive(Debug, Clone)]
-pub struct LabelNode<D> {
-    connections: Vec<GraphEdge>,
+pub struct LabelGraphNode<D>
+{
+    connections: Vec<LabelGraphEdge>,
     data: D,
 }
 
-// todo: is it good to be explicate about the Clone trait bound in this struct?
-impl<D> LabelNode<D> {
+impl<D> LabelGraphNode<D> {
     pub fn new(data: D) -> Self {
-        LabelNode {
+        LabelGraphNode {
             connections: Vec::new(),
             data
         }
