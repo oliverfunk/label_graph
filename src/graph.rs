@@ -141,6 +141,7 @@ pub enum ConnectionDirection {
 }
 
 /// Representation of a an edge between two nodes.
+// todo: convert node_label property into node and store a reference to a node. Will need to have some method that drops the ref if the node is deleted
 #[derive(Debug, Clone)]
 pub struct GraphEdge {
     direction: ConnectionDirection,
