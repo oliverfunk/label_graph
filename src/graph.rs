@@ -2,24 +2,23 @@ use std::collections::btree_map::Values;
 use std::collections::BTreeMap;
 
 /// Holds the nodes of the graph
-#[derive(Default, Debug, Clone)]
+#[derive(Debug, Clone)]
 pub struct DirectedLabelGraph<D>
 {
     nodes: BTreeMap<String, LabelGraphNode<D>>,
 }
 
-impl<D> IntoIterator for DirectedLabelGraph<D> {
-    type Item = i32;
-    type IntoIter = ::std::vec::IntoIter<i32>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        self.0.into_iter()
+impl<D> Default for DirectedLabelGraph<D> {
+    fn default() -> Self {
+        DirectedLabelGraph {
+            nodes: BTreeMap::new(),
+        }
     }
 }
 
 impl<D> DirectedLabelGraph<D> {
     pub fn new() -> Self {
-        Default::default()
+        DirectedLabelGraph::default()
     }
 
     fn get_node(&self, node_label: &str) -> Option<&LabelGraphNode<D>> {
@@ -34,7 +33,7 @@ impl<D> DirectedLabelGraph<D> {
         self.nodes.values()
     }
 
-    pub fn node_exists(&self, node_label: &str) -> bool {
+    pub fn check_node_exists(&self, node_label: &str) -> bool {
         self.nodes.contains_key(node_label)
     }
 
@@ -51,6 +50,10 @@ impl<D> DirectedLabelGraph<D> {
     }
 
     pub fn link_nodes(&mut self, from_node_label: &str, to_node_label: &str, weight: i64) {
+        if !(self.check_node_exists(from_node_label) && self.check_node_exists(to_node_label)) {
+            return;
+        }
+
         if let Some(node) = self.get_mut_node(from_node_label) {
             // correct way to do this is the following,
             // but waiting for nightly feature NLL (non-lexical lifetimes)
@@ -90,9 +93,6 @@ impl<D> DirectedLabelGraph<D> {
                     weight,
                 ))
             }
-        } else {
-            // if from_node doesn't exist, return and therefor don't modify to_node
-            return;
         }
 
         if let Some(node) = self.get_mut_node(to_node_label) {
