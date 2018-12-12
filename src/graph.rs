@@ -38,9 +38,9 @@ impl<D> DirectedLabelGraph<D> {
 
     // update node data if it exsits
     pub fn create_node(&mut self, node_label: &str, node_data: D) {
-        //        self.nodes.entry(node_label.to_string())
-        //            .and_modify(|node| node.data = node_data)
-        //            .or_insert(LabelGraphNode::new(node_data));
+//                self.nodes.entry(node_label.to_string())
+//                    .and_modify(|node| node.data = node_data)
+//                    .or_insert(LabelGraphNode::new(node_data));
 
         if self.check_node_exists(node_label) {
             self.nodes.get_mut(node_label).unwrap().data = node_data;
@@ -58,50 +58,33 @@ impl<D> DirectedLabelGraph<D> {
         self.get_mut_node(node_label).map(|n| &mut n.data)
     }
 
+    pub fn unlink_nodes(&mut self, node_label_A: &str, node_label_B: &str) {
+        if let Some(node) = self.get_mut_node(node_label_A) {
+
+        }
+    }
+
     pub fn link_nodes(&mut self, from_node_label: &str, to_node_label: &str, weight: i64) {
         if !(self.check_node_exists(from_node_label) && self.check_node_exists(to_node_label)) {
             return;
         }
 
         if let Some(node) = self.get_mut_node(from_node_label) {
-            // correct way to do this is the following,
-            // but waiting for nightly feature NLL (non-lexical lifetimes)
-            // to go stable
-            //            match node.connections.iter_mut().find(|edge| {
-            //                edge.node_label == to_node_label && edge.direction == ConnectionDirection::To
-            //            }) {
-            //                Some(edge) => {
-            //                    edge.weight = weight;
-            //                    true
-            //                }
-            //                None => {
-            //                    // create a new edge and push it
-            //                    node.connections.push(GraphEdge::new(
-            //                        to_node_label.to_string(),
-            //                        ConnectionDirection::To,
-            //                        weight,
-            //                    ))
-            //                }
-            //            };
-
-            let updated = match node.connections.iter_mut().find(|edge| {
+            match node.connections.iter_mut().find(|edge| {
                 edge.node_label == to_node_label && edge.direction == ConnectionDirection::To
             }) {
                 Some(edge) => {
                     edge.weight = weight;
-                    true
                 }
-                None => false,
+                None => {
+                    // create a new edge and push it
+                    node.connections.push(LabelGraphEdge::new(
+                        to_node_label.to_string(),
+                        ConnectionDirection::To,
+                        weight,
+                    ))
+                }
             };
-
-            if !updated {
-                // create a new edge and push it
-                node.connections.push(LabelGraphEdge::new(
-                    to_node_label.to_string(),
-                    ConnectionDirection::To,
-                    weight,
-                ))
-            }
         }
 
         if let Some(node) = self.get_mut_node(to_node_label) {

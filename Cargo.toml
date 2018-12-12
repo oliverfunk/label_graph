@@ -10,8 +10,9 @@ repository = "https://github.com/oliverfunk/labelgraph"
 license = "MIT/Apache-2.0"
 keywords = ["graph", "search", "mapping"]
 categories = ["data-structures", "algorithms"]
+edition = "2018"
 
 [badges]
-travis-ci = { repository = "oliverfunk/label_graph", branch = "master" }
+travis-ci = { repository = "oliverfunk/labelgraph", branch = "master" }
 
 [dependencies]

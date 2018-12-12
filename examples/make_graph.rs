@@ -6,7 +6,7 @@ struct NodeData(i32);
 use labelgraph::*;
 
 fn main() {
-    let mut g = DirectedLabelGraph::default();
+    let mut g =
 
     let n1 = NodeData(2);
     let n2 = NodeData(3);
