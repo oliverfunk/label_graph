@@ -1,6 +1,6 @@
 mod graph_traversal_algorithms;
 
-mod graph::*;
+mod graph;
 
 #[cfg(test)]
 mod tests {
