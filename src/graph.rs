@@ -2,7 +2,7 @@
 use std::collections::BTreeMap;
 
 /// Holds the nodes of the graph
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct DirectedLabelGraph<D> {
     nodes: BTreeMap<String, LabelGraphNode<D>>,
 }
