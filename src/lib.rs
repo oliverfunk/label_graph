@@ -1,6 +1,7 @@
+mod graph;
 mod graph_traversal_algorithms;
 
-mod graph;
+pub use crate::{graph::DirectedLabelGraph, graph_traversal_algorithms::*};
 
 #[cfg(test)]
 mod tests {
