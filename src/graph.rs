@@ -1,18 +1,11 @@
 //use std::collections::btree_map::Values;
 use std::collections::BTreeMap;
+use std::iter::FromIterator;
 
 /// Holds the nodes of the graph
 #[derive(Debug)]
 pub struct DirectedLabelGraph<D> {
     nodes: BTreeMap<String, LabelGraphNode<D>>,
-}
-
-impl<D> Default for DirectedLabelGraph<D> {
-    fn default() -> Self {
-        DirectedLabelGraph {
-            nodes: BTreeMap::new(),
-        }
-    }
 }
 
 impl<D> DirectedLabelGraph<D> {
@@ -21,16 +14,13 @@ impl<D> DirectedLabelGraph<D> {
     }
 
     fn get_node(&self, node_label: &str) -> Option<&LabelGraphNode<D>> {
+
         self.nodes.get(node_label)
     }
 
     fn get_mut_node(&mut self, node_label: &str) -> Option<&mut LabelGraphNode<D>> {
         self.nodes.get_mut(node_label)
     }
-
-    //    pub fn iter_nodes(&self) -> Values<String, LabelGraphNode<D>> {
-    //        self.nodes.values()
-    //    }
 
     pub fn check_node_exists(&self, node_label: &str) -> bool {
         self.nodes.contains_key(node_label)
@@ -105,13 +95,12 @@ impl<D> DirectedLabelGraph<D> {
         };
     }
 
-    pub fn get_inputs_for_node(&self, node_label: &str) -> Option<Vec<LabelGraphEdge>> {
+    pub fn get_inputs_for_node(&self, node_label: &str) -> Option<Vec<&LabelGraphEdge>> {
         if let Some(node) = self.get_node(node_label) {
             Some(
                 node.connections
                     .iter()
                     .filter(|edge| edge.direction == ConnectionDirection::From)
-                    .cloned()
                     .collect(),
             )
         } else {
@@ -119,7 +108,7 @@ impl<D> DirectedLabelGraph<D> {
         }
     }
 
-    pub fn get_outputs_for_node(&self, node_label: &str) -> Option<Vec<LabelGraphEdge>> {
+    pub fn get_outputs_for_node(&self, node_label: &str) -> Option<Vec<&LabelGraphEdge>> {
         let node = self.get_node(node_label);
         if node.is_some() {
             Some(
@@ -127,11 +116,80 @@ impl<D> DirectedLabelGraph<D> {
                     .connections
                     .iter()
                     .filter(|edge| edge.direction == ConnectionDirection::To)
-                    .cloned()
                     .collect(),
             )
         } else {
             None
+        }
+    }
+
+    pub fn iter_node_data(&self) -> impl Iterator<Item=&D> {
+        IterGraphNodeData::new(self.nodes.values().map(|node| &node.data).collect())
+    }
+
+    pub fn iter_node_label_and_data(&self) -> impl Iterator<Item=(&String, &D)> {
+        IterGraphNodeLabelAndData::new(self.nodes.iter().map(|node| (node.0, &node.1.data)).collect())
+    }
+}
+
+impl<D> Default for DirectedLabelGraph<D> {
+    fn default() -> Self {
+        DirectedLabelGraph {
+            nodes: BTreeMap::new(),
+        }
+    }
+}
+
+pub struct IterGraphNodeData<'a, D> {
+    curr_idx: usize,
+    items: Vec<&'a D>,
+}
+
+impl<'a, D> IterGraphNodeData<'a, D> {
+    pub fn new(items: Vec<&'a D>) -> Self {
+        IterGraphNodeData {
+            curr_idx: 0,
+            items,
+        }
+    }
+}
+
+impl<'a, D> Iterator for IterGraphNodeData<'a, D> {
+    type Item = &'a D;
+
+    fn next(&mut self) -> Option<<Self as Iterator>::Item> {
+        if self.curr_idx >= self.items.len(){
+            None
+        } else {
+            self.curr_idx += 1;
+            Some(self.items[self.curr_idx - 1])
+        }
+    }
+}
+
+pub struct IterGraphNodeLabelAndData<'a, D> {
+    curr_idx: usize,
+    items: Vec<(&'a String, &'a D)>,
+}
+
+impl<'a, D> IterGraphNodeLabelAndData<'a, D> {
+    pub fn new(items: Vec<(&'a String, &'a D)>) -> Self {
+        IterGraphNodeLabelAndData {
+            curr_idx: 0,
+            items,
+        }
+    }
+}
+
+impl<'a, D> Iterator for IterGraphNodeLabelAndData<'a, D> {
+    type Item = (&'a String, &'a D);
+
+    fn next(&mut self) -> Option<<Self as Iterator>::Item> {
+        if self.curr_idx >= self.items.len(){
+            None
+        } else {
+            self.curr_idx += 1;
+            Some(self.items[self.curr_idx - 1])
         }
     }
 }

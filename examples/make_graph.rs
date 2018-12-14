@@ -14,11 +14,10 @@ fn main() {
     g.create_node("n2", n2);
     g.create_node("n3", n3);
 
-    println!("linking: n1 -> n2");
+    println!("linking: n1 -> n2\n");
     g.link_nodes("n1", "n2", 1);
     g.link_nodes("n1", "n22", 2); // won't do anything
 
-    println!();
     println!(
         "n1's data before being modified: {:?}",
         g.get_node_data("n1")
@@ -28,13 +27,13 @@ fn main() {
         let n1_data = g.get_mut_node_data("n1").unwrap();
         (*n1_data).0 = 100;
     }
-    println!("n1's data after modified: {:?}", g.get_node_data("n1"));
-    println!();
+    println!("n1's data after modified: {:?}\n", g.get_node_data("n1"));
 
-    //    for n in g.iter_nodes() {
-    //        println!("node: {:?}", n)
-    //    }
-    //    println!();
+    println!("Iter through node label and data:");
+    for nd in g.iter_node_label_and_data() {
+        println!("node data -> {:?}", nd)
+    }
+    println!();
 
     println!("n1 outputs to: {:?}", g.get_outputs_for_node("n1"));
     println!("n2 take input from: {:?}", g.get_inputs_for_node("n2"));
