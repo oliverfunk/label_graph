@@ -24,7 +24,7 @@ fn main() {
     {
         // modify n1's data
         let n1_data = g.get_mut_node_data("n1").unwrap();
-        (*n1_data).0 = 100;
+        n1_data.0 = 100;
     }
     println!("n1's data after modified: {:?}\n", g.get_node_data("n1"));
 

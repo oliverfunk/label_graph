@@ -53,9 +53,9 @@ impl<D> DirectedLabelGraph<D> {
 
     pub fn link_nodes(&mut self, from_node_label: &str, to_node_label: &str, weight: i64) {
         if !self.check_node_exists(from_node_label) {
-            panic!("{:?} doesn't exist", from_node_label);
+            panic!("node {} doesn't exist", from_node_label);
         } else if !self.check_node_exists(to_node_label) {
-            panic!("{:?} doesn't exist", to_node_label);
+            panic!("node {} doesn't exist", to_node_label);
         }
 
         if let Some(node) = self.get_mut_node(from_node_label) {
