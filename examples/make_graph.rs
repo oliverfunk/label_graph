@@ -16,7 +16,6 @@ fn main() {
 
     println!("linking: n1 -> n2\n");
     g.link_nodes("n1", "n2", 1);
-    g.link_nodes("n1", "n22", 2); // won't do anything
 
     println!(
         "n1's data before being modified: {:?}",

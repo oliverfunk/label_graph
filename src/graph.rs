@@ -1,6 +1,5 @@
 //use std::collections::btree_map::Values;
 use std::collections::BTreeMap;
-use std::iter::FromIterator;
 
 /// Holds the nodes of the graph
 #[derive(Debug)]
@@ -14,7 +13,6 @@ impl<D> DirectedLabelGraph<D> {
     }
 
     fn get_node(&self, node_label: &str) -> Option<&LabelGraphNode<D>> {
-
         self.nodes.get(node_label)
     }
 
@@ -49,13 +47,15 @@ impl<D> DirectedLabelGraph<D> {
         self.get_mut_node(node_label).map(|n| &mut n.data)
     }
 
-    pub fn unlink_nodes(&mut self, node_label_A: &str, _node_label_B: &str) {
-        if let Some(_node) = self.get_mut_node(node_label_A) {}
-    }
+    //    pub fn unlink_nodes(&mut self, node_label_A: &str, _node_label_B: &str) {
+    //        unimplemented!()
+    //    }
 
     pub fn link_nodes(&mut self, from_node_label: &str, to_node_label: &str, weight: i64) {
-        if !(self.check_node_exists(from_node_label) && self.check_node_exists(to_node_label)) {
-            return;
+        if !self.check_node_exists(from_node_label) {
+            panic!("{:?} doesn't exist", from_node_label);
+        } else if !self.check_node_exists(to_node_label) {
+            panic!("{:?} doesn't exist", to_node_label);
         }
 
         if let Some(node) = self.get_mut_node(from_node_label) {
@@ -123,12 +123,17 @@ impl<D> DirectedLabelGraph<D> {
         }
     }
 
-    pub fn iter_node_data(&self) -> impl Iterator<Item=&D> {
+    pub fn iter_node_data(&self) -> impl Iterator<Item = &D> {
         IterGraphNodeData::new(self.nodes.values().map(|node| &node.data).collect())
     }
 
-    pub fn iter_node_label_and_data(&self) -> impl Iterator<Item=(&String, &D)> {
-        IterGraphNodeLabelAndData::new(self.nodes.iter().map(|node| (node.0, &node.1.data)).collect())
+    pub fn iter_node_label_and_data(&self) -> impl Iterator<Item = (&String, &D)> {
+        IterGraphNodeLabelAndData::new(
+            self.nodes
+                .iter()
+                .map(|node| (node.0, &node.1.data))
+                .collect(),
+        )
     }
 }
 
@@ -147,10 +152,7 @@ pub struct IterGraphNodeData<'a, D> {
 
 impl<'a, D> IterGraphNodeData<'a, D> {
     pub fn new(items: Vec<&'a D>) -> Self {
-        IterGraphNodeData {
-            curr_idx: 0,
-            items,
-        }
+        IterGraphNodeData { curr_idx: 0, items }
     }
 }
 
@@ -158,7 +160,7 @@ impl<'a, D> Iterator for IterGraphNodeData<'a, D> {
     type Item = &'a D;
 
     fn next(&mut self) -> Option<<Self as Iterator>::Item> {
-        if self.curr_idx >= self.items.len(){
+        if self.curr_idx >= self.items.len() {
             None
         } else {
             self.curr_idx += 1;
@@ -174,10 +176,7 @@ pub struct IterGraphNodeLabelAndData<'a, D> {
 
 impl<'a, D> IterGraphNodeLabelAndData<'a, D> {
     pub fn new(items: Vec<(&'a String, &'a D)>) -> Self {
-        IterGraphNodeLabelAndData {
-            curr_idx: 0,
-            items,
-        }
+        IterGraphNodeLabelAndData { curr_idx: 0, items }
     }
 }
 
@@ -185,7 +184,7 @@ impl<'a, D> Iterator for IterGraphNodeLabelAndData<'a, D> {
     type Item = (&'a String, &'a D);
 
     fn next(&mut self) -> Option<<Self as Iterator>::Item> {
-        if self.curr_idx >= self.items.len(){
+        if self.curr_idx >= self.items.len() {
             None
         } else {
             self.curr_idx += 1;
